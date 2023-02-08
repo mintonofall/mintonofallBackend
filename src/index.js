@@ -2,10 +2,12 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const app = express();
+const cors = require("cors");
 
 const users = [];
 
 app.use(express.json());
+app.use(cors());
 
 app.post("/signup", (req, res) => {
   const email = req.body.email;
@@ -21,6 +23,7 @@ app.post("/signup", (req, res) => {
       // Store the hashed password and email in the users array
       const user = { email, password: hash };
       users.push(user);
+      console.log(user);
       res.status(200).json({
         message: "Sign up successful",
       });
@@ -61,6 +64,6 @@ app.post("/login", (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log("Server started on port 3000");
+app.listen(4000, () => {
+  console.log("Server started on port 4000");
 });
