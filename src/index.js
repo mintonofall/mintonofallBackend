@@ -1,56 +1,66 @@
 const express = require("express");
-const cors = require("cors");
-const session = require("express-session");
-const fs = require("fs");
-const https = require("https");
-
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const app = express();
 
-const PORT = process.env.PORT || 4000;
-
-// express-session 라이브러리를 이용해 쿠키 설정
-app.use(
-  session({
-    secret: "@codestates",
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      domain: "localhost",
-      path: "/",
-      maxAge: 24 * 6 * 60 * 10000,
-      sameSite: "none",
-      httpOnly: true,
-      secure: true,
-    },
-  })
-);
+const users = [];
 
 app.use(express.json());
 
-// 클라이언트가 어떤 origin에 따른 CORS 설정 (메서드 : GET, POST, OPTIONS)
-app.use(
-  cors({
-    origin: "https://localhost:3000",
-    methods: ["GET", "POST", "OPTIONS"],
-    credentials: true,
-  })
-);
+app.post("/signup", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
 
-// 라우터 설정
+  // Hash the password using bcrypt
+  bcrypt.hash(password, 10, (err, hash) => {
+    if (err) {
+      return res.status(500).json({
+        error: err,
+      });
+    } else {
+      // Store the hashed password and email in the users array
+      const user = { email, password: hash };
+      users.push(user);
+      res.status(200).json({
+        message: "Sign up successful",
+      });
+    }
+  });
+});
 
-let server;
-// 인증서 파일들이 존재하는 경우에만 https 프로토콜을 사용하는 서버를 실행
-if (fs.existsSync("./key.pem") && fs.existsSync("./cert.pem")) {
-  server = https
-    .createServer(
-      {
-        key: fs.readFileSync(__dirname + `/` + "key.pem", "utf-8"),
-        cert: fs.readFileSync(__dirname + `/` + "cert.pem", "utf-8"),
-      },
-      app
-    )
-    .listen(PORT);
-} else {
-  server = app.listen(PORT);
-}
-module.exports = server;
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // Check if the email exists in the users array
+  const user = users.find((u) => u.email === email);
+  if (!user) {
+    return res.status(401).json({
+      message: "Login failed",
+    });
+  }
+
+  // Compare the password with the hashed password stored in the users array
+  bcrypt.compare(password, user.password, (err, result) => {
+    if (err) {
+      return res.status(401).json({
+        message: "Login failed",
+      });
+    }
+    if (result) {
+      // Generate a JWT token
+      const token = jwt.sign({ email }, "secret_key", { expiresIn: "1h" });
+      return res.status(200).json({
+        message: "Login successful",
+        token,
+      });
+    }
+    return res.status(401).json({
+      message: "Login failed",
+    });
+  });
+});
+
+app.listen(3000, () => {
+  console.log("Server started on port 3000");
+});
