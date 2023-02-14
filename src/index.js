@@ -20,8 +20,8 @@ MongoClient.connect(uri)
     console.log("DB connect");
   })
   .then(
-    app.listen(4002, () => {
-      console.log("lisen at 4002");
+    app.listen(8080, () => {
+      console.log("lisen at 8080");
     })
   );
 
