@@ -3,27 +3,32 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+
+require("dotenv").config();
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri =
-  "mongodb+srv://treebird1982:ZnPh7eLOMEWgpnvm@cluster0.vqq8hhk.mongodb.net/?retryWrites=true&w=majority";
+const uri = process.env.MONGO_DB_URL;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
-
+mongoose.connect(uri).then(() => {
+  console.log("mongoose is working");
+});
 const app = express();
 const users = [];
-MongoClient.connect(uri)
-  .then((client) => {
-    console.log("DB connect");
-  })
-  .then(
-    app.listen(8080, () => {
-      console.log("lisen at 8080");
-    })
-  );
+
+// MongoClient.connect(uri)
+//   .then((client) => {
+//     console.log("DB connect");
+//   })
+//   .then(
+//     app.listen(8080, () => {
+//       console.log("lisen at 8080");
+//     })
+//   );
 
 // app.use(express.json());
 app.use(cors());
@@ -31,7 +36,7 @@ app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
   return res.send("sever is ok");
-})
+});
 
 app.post("/signup", (req, res) => {
   const { email, username, password } = req.body;
